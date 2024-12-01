@@ -10,10 +10,11 @@ qa_pipeline = pipeline("question-answering", model="distilbert-base-cased-distil
 
 # Step 3: Define Your Company Data (FAQs)
 context = """
-Our company, TechSolutions, specializes in providing cutting-edge software solutions for businesses worldwide. 
-Founded in 2010, we offer services including cloud computing, AI development, and data analytics. 
-Our headquarters are located in New York City, and we have offices in London and Tokyo. 
-For support, contact support@techsolutions.com or call +1-800-555-1234.
+Kmtec Ltd is a UK-based AI consultancy offering a range of services including AI solutions, software integration, embedded systems, and web/app development. Their AI offerings focus on human-like AI chatbots, enabling businesses to enhance customer support with automated systems. They also provide specialized technical consultancy, including HMI development, test automation, and systems integration.
+
+Kmtec Ltd’s portfolio includes innovative products like a Water Tank Level Detector, Queue Management Systems, and customer feedback solutions. They also offer tailored training programs in areas such as CAD, Electric Vehicle Powertrains, and software tools like Windchill PDMLink and FreeCAD.
+
+The company specializes in developing software for industries like automotive, aerospace, and healthcare. Key services include system development, Agile software solutions, and technical architecture for projects requiring high compliance standards (ASPICE, ISO26262). They have a diverse team with expertise in languages like C, C++, Java, and Python, and a wide range of technologies including Windchill, Rhapsody, and Python libraries. Kmtec Ltd also supports clients with project management, technical requirements engineering, and software testing services.
 """
 
 # Step 4: Set Up the Flask App
