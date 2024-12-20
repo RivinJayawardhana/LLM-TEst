@@ -1,72 +1,62 @@
-# Step 1: Install Required Libraries
-# pip install transformers flask torch
+from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS
+from transformers import AutoTokenizer, AutoModelForQuestionAnswering, pipeline
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 
-from flask import Flask, request, jsonify
-from transformers import pipeline
-
-# Step 2: Load a Pre-Trained Model and Fine-Tune It
-# Using a Question Answering pipeline (e.g., BERT or DistilBERT)
-qa_pipeline = pipeline("question-answering", model="distilbert-base-cased-distilled-squad")
-
-# Step 3: Define Your Company Data (FAQs)
-context = """
-Kmtec Ltd is a UK-based AI consultancy offering a range of services including AI solutions, software integration, embedded systems, and web/app development. Their AI offerings focus on human-like AI chatbots, enabling businesses to enhance customer support with automated systems. They also provide specialized technical consultancy, including HMI development, test automation, and systems integration.
-
-Kmtec Ltd’s portfolio includes innovative products like a Water Tank Level Detector, Queue Management Systems, and customer feedback solutions. They also offer tailored training programs in areas such as CAD, Electric Vehicle Powertrains, and software tools like Windchill PDMLink and FreeCAD.
-
-The company specializes in developing software for industries like automotive, aerospace, and healthcare. Key services include system development, Agile software solutions, and technical architecture for projects requiring high compliance standards (ASPICE, ISO26262). They have a diverse team with expertise in languages like C, C++, Java, and Python, and a wide range of technologies including Windchill, Rhapsody, and Python libraries. Kmtec Ltd also supports clients with project management, technical requirements engineering, and software testing services.
-"""
-
-# Step 4: Set Up the Flask App
 app = Flask(__name__)
+CORS(app)
 
-@app.route('/chatbot', methods=['POST'])
-def chatbot():
-    user_input = request.json.get("question")
-    if not user_input:
-        return jsonify({"error": "Question not provided."}), 400
+# Load the QA model
+model_name = "distilbert-base-cased-distilled-squad"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+qa_model = AutoModelForQuestionAnswering.from_pretrained(model_name)
+qa_pipeline = pipeline("question-answering", model=qa_model, tokenizer=tokenizer)
 
+# Company-related context documents (as examples for RAG)
+company_documents = [
+    "KMTEC LTD specializes in AI-driven solutions for various industries.",
+    "The company offers products like chatbots, data analytics platforms, and software development services.",
+    "Our mission is to deliver innovation and exceptional customer service.",
+    "KMTEC LTD has been at the forefront of AI research and application development.",
+]
+
+# Create a retriever using TF-IDF
+vectorizer = TfidfVectorizer()
+doc_vectors = vectorizer.fit_transform(company_documents)
+
+def retrieve_relevant_document(question):
+    """Retrieve the most relevant document using cosine similarity."""
+    question_vector = vectorizer.transform([question])
+    similarities = cosine_similarity(question_vector, doc_vectors).flatten()
+    best_doc_index = np.argmax(similarities)
+    return company_documents[best_doc_index]
+
+@app.route("/")
+def home():
+    return render_template("index.html")
+
+@app.route("/ask", methods=["POST"])
+def ask():
     try:
-        # Generate the answer using the QA pipeline
-        result = qa_pipeline({"question": user_input, "context": context})
-        return jsonify({"answer": result["answer"], "score": result["score"]})
+        # Get the user's question from the request
+        data = request.get_json()
+        user_question = data.get("question", "")
+        
+        if not user_question:
+            return jsonify({"error": "Question is required"}), 400
+        
+        # Retrieve the most relevant document
+        relevant_context = retrieve_relevant_document(user_question)
+
+        # Use the QA model to answer the question
+        answer = qa_pipeline(question=user_question, context=relevant_context)
+        
+        # Return the answer
+        return jsonify({"answer": answer["answer"]})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Step 5: Frontend Code
-frontend_code = """
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Company Chatbot</title>
-    <script>
-        async function askQuestion() {
-            const question = document.getElementById('question').value;
-            const response = await fetch('/chatbot', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ question: question }),
-            });
-            const data = await response.json();
-            document.getElementById('answer').innerText = data.answer || data.error;
-        }
-    </script>
-</head>
-<body>
-    <h1>Welcome to TechSolutions Chatbot</h1>
-    <input type="text" id="question" placeholder="Ask a question about TechSolutions">
-    <button onclick="askQuestion()">Submit</button>
-    <p id="answer"></p>
-</body>
-</html>
-"""
-
-@app.route('/')
-def frontend():
-    return frontend_code
-
-# Step 6: Run the App
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run(debug=True)
