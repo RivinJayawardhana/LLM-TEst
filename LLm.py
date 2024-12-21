@@ -16,10 +16,7 @@ qa_pipeline = pipeline("question-answering", model=qa_model, tokenizer=tokenizer
 
 # Company-related context documents (as examples for RAG)
 company_documents = [
-    "KMTEC LTD specializes in AI-driven solutions for various industries.",
-    "The company offers products like chatbots, data analytics platforms, and software development services.",
-    "Our mission is to deliver innovation and exceptional customer service.",
-    "KMTEC LTD has been at the forefront of AI research and application development.",
+    "KmTec Ltd is a UK-based technology consultancy specializing in AI solutions and embedded systems, offering innovative services in human-machine interface (HMI) development, software integration, and IoT systems. The company provides custom solutions for industries including automotive, aerospace, healthcare, and telecommunications, with products such as smart water tank level detectors, queue management systems, and customer feedback platforms. KmTec Ltd also offers expertise in AI-powered chatbots, predictive models, and embedded systems design, leveraging technologies like Zigbee, STM8 microcontrollers, and advanced machine learning to help businesses optimize operations. With a focus on agile development, system engineering, and product lifecycle management, KmTec Ltd delivers tailored, high-performance solutions to meet complex business needs.",
 ]
 
 # Create a retriever using TF-IDF
